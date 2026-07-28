@@ -1,0 +1,18 @@
+{
+  "id": "/maxagile/",
+  "name": "MaxAgile - Task & Workspace Management",
+  "short_name": "MaxAgile",
+  "description": "Aplikasi manajemen tugas dan workspace untuk berbagai jenis pekerjaan.",
+  "start_url": "/maxagile/",
+  "scope": "/maxagile/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    { "src": "/maxagile/icons/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/maxagile/icons/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/maxagile/icons/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/maxagile/icons/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

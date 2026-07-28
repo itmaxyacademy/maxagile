@@ -29,7 +29,7 @@ export default function App() {
   useEffect(() => {
     if (searchQuery.trim() !== "") {
       setSearching(true);
-      fetch('/api/tasks')
+      fetch(`${import.meta.env.BASE_URL}api/tasks`)
         .then(res => res.json())
         .then(data => {
           setAllTasks(data);
@@ -64,7 +64,7 @@ export default function App() {
 
   const fetchWorkspaces = async () => {
     setLoading(true);
-    const res = await fetch('/api/workspaces');
+    const res = await fetch(`${import.meta.env.BASE_URL}api/workspaces`);
     if (res.ok) {
         const data = await res.json();
         setWorkspaces(data);
@@ -79,7 +79,7 @@ export default function App() {
   const createWorkspace = async () => {
     if (!newWorkspaceName.trim()) return;
     
-    const res = await fetch('/api/workspaces', {
+    const res = await fetch(`${import.meta.env.BASE_URL}api/workspaces`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newWorkspaceName, description: "", type: newWorkspaceTemplate })

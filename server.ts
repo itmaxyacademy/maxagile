@@ -1,4 +1,6 @@
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { PrismaClient } from "@prisma/client";
@@ -7,12 +9,14 @@ const prisma = new PrismaClient();
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
   app.use(express.json());
 
+  const apiRouter = express.Router();
+
   // API Routes
-  app.get("/api/health", async (req, res) => {
+  apiRouter.get("/health", async (req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
       res.json({ status: "ok", db: "connected" });
@@ -22,12 +26,12 @@ async function startServer() {
   });
 
   // Workspaces
-  app.get("/api/workspaces", async (req, res) => {
+  apiRouter.get("/workspaces", async (req, res) => {
     const workspaces = await prisma.workspace.findMany();
     res.json(workspaces);
   });
 
-  app.post("/api/workspaces", async (req, res) => {
+  apiRouter.post("/workspaces", async (req, res) => {
     const { name, description, type } = req.body;
     const workspace = await prisma.workspace.create({
       data: { name, description, type },
@@ -167,7 +171,7 @@ async function startServer() {
     res.json(workspace);
   });
 
-  app.get("/api/workspaces/:id", async (req, res) => {
+  apiRouter.get("/workspaces/:id", async (req, res) => {
     const workspace = await prisma.workspace.findUnique({
       where: { id: req.params.id },
       include: {
@@ -179,13 +183,13 @@ async function startServer() {
     res.json(workspace);
   });
   
-  app.delete("/api/workspaces/:id", async (req, res) => {
+  apiRouter.delete("/workspaces/:id", async (req, res) => {
     await prisma.workspace.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   });
 
   // Statuses
-  app.post("/api/workspaces/:id/statuses", async (req, res) => {
+  apiRouter.post("/workspaces/:id/statuses", async (req, res) => {
     const { name, color, order } = req.body;
     const status = await prisma.status.create({
       data: { name, color, order, workspaceId: req.params.id }
@@ -194,7 +198,7 @@ async function startServer() {
   });
 
   // Work Items
-  app.post("/api/workspaces/:id/work-items", async (req, res) => {
+  apiRouter.post("/workspaces/:id/work-items", async (req, res) => {
     const { title, description, priority, statusId, labels } = req.body;
     let finalStatusId = statusId;
     if (!finalStatusId) {
@@ -227,7 +231,7 @@ async function startServer() {
     res.json(workItem);
   });
 
-  app.patch("/api/work-items/:id", async (req, res) => {
+  apiRouter.patch("/work-items/:id", async (req, res) => {
     try {
       const existing = await prisma.workItem.findUnique({
         where: { id: req.params.id },
@@ -330,18 +334,22 @@ async function startServer() {
     }
   });
 
-  app.delete("/api/work-items/:id", async (req, res) => {
+  apiRouter.delete("/work-items/:id", async (req, res) => {
     await prisma.workItem.delete({ where: { id: req.params.id } });
     res.json({ success: true });
   });
   
-  app.get("/api/tasks", async (req, res) => {
+  apiRouter.get("/tasks", async (req, res) => {
     const tasks = await prisma.workItem.findMany({
       include: { workspace: true, status: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(tasks);
   });
+
+  app.use('/api', apiRouter);
+  app.use('/', apiRouter);
+  app.use((process.env.BASE_PATH || '') + '/api', apiRouter);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
@@ -352,8 +360,8 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
+    app.use(process.env.BASE_PATH || "", express.static(distPath));
+    app.get(`${process.env.BASE_PATH || ""}/*all`, (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

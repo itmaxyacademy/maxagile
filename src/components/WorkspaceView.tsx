@@ -79,7 +79,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
 
   const fetchWorkspace = async () => {
     setLoading(true);
-    const res = await fetch(`/api/workspaces/${workspaceId}`);
+    const res = await fetch(`${import.meta.env.BASE_URL}api/workspaces/${workspaceId}`);
     if (res.ok) {
       const data = await res.json();
       setWorkspaceData(data);
@@ -126,7 +126,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
 
   const handleDeleteWorkspace = async () => {
     if (confirm("Apakah Anda yakin ingin menghapus ruang kerja ini? Semua data akan hilang.")) {
-      await fetch(`/api/workspaces/${workspaceId}`, { method: 'DELETE' });
+      await fetch(`${import.meta.env.BASE_URL}api/workspaces/${workspaceId}`, { method: 'DELETE' });
       onDeleteWorkspace();
     }
   };
@@ -135,7 +135,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
-    await fetch(`/api/workspaces/${workspaceId}/work-items`, {
+    await fetch(`${import.meta.env.BASE_URL}api/workspaces/${workspaceId}/work-items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -160,7 +160,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     e.preventDefault();
     if (!newColumnName.trim()) return;
 
-    await fetch(`/api/workspaces/${workspaceId}/statuses`, {
+    await fetch(`${import.meta.env.BASE_URL}api/workspaces/${workspaceId}/statuses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -184,7 +184,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
       setWorkspaceData({ ...workspaceData, workItems: newItems });
     }
 
-    await fetch(`/api/work-items/${itemId}`, {
+    await fetch(`${import.meta.env.BASE_URL}api/work-items/${itemId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ statusId: newStatusId })
@@ -202,7 +202,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
       ? `(${editTaskStoryPoints}) ${editTaskTitle.trim()}`
       : editTaskTitle.trim();
 
-    await fetch(`/api/work-items/${selectedTask.id}`, {
+    await fetch(`${import.meta.env.BASE_URL}api/work-items/${selectedTask.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -222,7 +222,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
 
   const deleteWorkItem = async (itemId: string) => {
     if (confirm("Hapus tugas ini?")) {
-       await fetch(`/api/work-items/${itemId}`, { method: 'DELETE' });
+       await fetch(`${import.meta.env.BASE_URL}api/work-items/${itemId}`, { method: 'DELETE' });
        setSelectedTask(null);
        fetchWorkspace();
     }

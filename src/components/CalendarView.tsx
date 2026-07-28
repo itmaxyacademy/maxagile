@@ -12,7 +12,7 @@ export function CalendarView() {
   const [showFilter, setShowFilter] = useState(false);
 
   useEffect(() => {
-    fetch('/api/tasks')
+    fetch(`${import.meta.env.BASE_URL}api/tasks`)
       .then(res => res.json())
       .then(data => {
         setTasks(data);
