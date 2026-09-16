@@ -112,7 +112,7 @@ export default function App() {
               
               <h1 className="text-4xl md:text-6xl font-extrabold text-brand-text mb-6 tracking-tight leading-tight">
                 Kelola Pekerjaan Lebih Cerdas <br className="hidden md:block" />
-                <span className="text-brand-orange">dengan MaxAgile</span>
+                <span className="text-brand-orange">dengan MaxAgile</span> <span className="inline-block text-xs font-mono font-bold text-brand-orange bg-orange-100/70 border border-orange-300 px-2.5 py-0.5 rounded-full align-middle ml-2">v{APP_VERSION}</span>
               </h1>
               
               <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -357,6 +357,7 @@ export default function App() {
                activeView.type === 'settings' ? 'Pengaturan' : 
                activeView.type === 'workspace' ? `${activeView.name || 'Ruang Kerja'}` : activeView.type}
             </h2>
+            <span className="ml-2.5 px-2 py-0.5 text-xs font-mono font-bold text-brand-orange bg-orange-50 border border-orange-200 rounded-full shrink-0 shadow-2xs" title={`MaxAgile v${APP_VERSION}`}>v{APP_VERSION}</span>
           </div>
 
           {/* Global Search Bar */}
