@@ -1,3 +1,4 @@
+import { APP_VERSION } from './version';
 import { PWAUpdateToast } from "./components/PWAUpdateToast";
 /**
  * @license
@@ -269,6 +270,7 @@ export default function App() {
           {!sidebarCollapsed && <h1 className="text-xl font-bold flex items-center gap-2 text-brand-text">
             <CheckSquare className="w-6 h-6 text-brand-orange" />
             MaxAgile
+            <button onClick={() => { if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration().then(r => r?.update()); window.dispatchEvent(new CustomEvent('pwa-check-version')); }} className="text-[10px] font-mono font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded px-1.5 py-0.5 transition-colors cursor-pointer" title={`MaxAgile v${APP_VERSION} - Klik untuk cek update`}>v{APP_VERSION}</button>
           </h1>}
           <button className="md:hidden text-gray-500 hover:bg-gray-200 p-1 rounded-md" onClick={() => setMobileMenuOpen(false)}>
             <X size={20} />
