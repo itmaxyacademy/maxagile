@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maxagile-cache-v1';
+const CACHE_NAME = 'maxagile-pwa-v1.0.0';
 const PRECACHE_ASSETS = [
   '/maxagile/',
   '/maxagile/index.html',
@@ -7,15 +7,25 @@ const PRECACHE_ASSETS = [
   '/maxagile/icons/pwa-512.png'
 ];
 
+// Handle SKIP_WAITING from client update toast
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('[Service Worker] Some assets failed to pre-cache:', err);
-      });
+      return Promise.allSettled(
+        PRECACHE_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.warn('[Service Worker] Asset cache failed:', asset, err);
+          })
+        )
+      );
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -23,19 +33,18 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
+          if (cache.startsWith('maxagile') && cache !== CACHE_NAME) {
             return caches.delete(cache);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('/api/')) return;
+  if (event.request.url.includes('/api/') || event.request.url.endsWith('version.json')) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

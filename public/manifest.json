@@ -2,6 +2,7 @@
   "id": "/maxagile/",
   "name": "MaxAgile - Task & Workspace Management",
   "short_name": "MaxAgile",
+  "version": "1.0.0",
   "description": "Aplikasi manajemen tugas dan workspace untuk berbagai jenis pekerjaan.",
   "start_url": "/maxagile/",
   "scope": "/maxagile/",

@@ -1,3 +1,4 @@
+import { PWAUpdateToast } from "./components/PWAUpdateToast";
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -494,6 +495,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* PWA Auto-Update Notification Toast */}
+      <PWAUpdateToast />
     </div>
   );
 }
