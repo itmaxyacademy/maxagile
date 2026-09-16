@@ -5,7 +5,7 @@ import { PWAUpdateToast } from "./components/PWAUpdateToast";
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ReactNode } from 'react';
 import { LayoutDashboard, CheckSquare, Calendar as CalendarIcon, Settings, FolderKanban, Plus, Menu, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { Workspace, WorkItem } from './types';
 import { WorkspaceView } from './components/WorkspaceView';
@@ -207,9 +207,33 @@ export default function App() {
           </div>
         );
       case 'tasks':
-        return <MyTasksView />;
+        return (
+          <MyTasksView 
+            workspaces={workspaces}
+            onNavigateToTask={(wsId, taskId) => {
+              const ws = workspaces.find(w => w.id === wsId);
+              setActiveView({ type: 'workspace', id: wsId, name: ws?.name || 'Ruang Kerja', initialTaskId: taskId });
+            }}
+            onNavigateToWorkspace={(wsId) => {
+              const ws = workspaces.find(w => w.id === wsId);
+              setActiveView({ type: 'workspace', id: wsId, name: ws?.name || 'Ruang Kerja' });
+            }}
+          />
+        );
       case 'calendar':
-        return <CalendarView />;
+        return (
+          <CalendarView 
+            workspaces={workspaces}
+            onNavigateToTask={(wsId, taskId) => {
+              const ws = workspaces.find(w => w.id === wsId);
+              setActiveView({ type: 'workspace', id: wsId, name: ws?.name || 'Ruang Kerja', initialTaskId: taskId });
+            }}
+            onNavigateToWorkspace={(wsId) => {
+              const ws = workspaces.find(w => w.id === wsId);
+              setActiveView({ type: 'workspace', id: wsId, name: ws?.name || 'Ruang Kerja' });
+            }}
+          />
+        );
       case 'learning':
         return <LearningHub />;
       case 'workspace':
@@ -505,7 +529,7 @@ export default function App() {
   );
 }
 
-function NavItem({ icon, label, active = false, collapsed = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, collapsed?: boolean, onClick?: () => void }) {
+function NavItem({ icon, label, active = false, collapsed = false, onClick }: { icon: ReactNode, label: string, active?: boolean, collapsed?: boolean, onClick?: () => void, key?: any }) {
   return (
     <button 
       onClick={onClick}

@@ -60,8 +60,9 @@ export function MigrationWizard() {
     let highest = "scrum";
     let max = 0;
     for (const [key, val] of Object.entries(counts)) {
-      if (val > max) {
-        max = val;
+      const numVal = val as number;
+      if (numVal > max) {
+        max = numVal;
         highest = key;
       }
     }

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Workspace, Status, WorkItem } from '../types';
-import { Trash2, Plus, GripVertical, Calendar as CalendarIcon, Flag, Edit2, X, CheckSquare, Clock, LayoutGrid, Star, Sparkles } from 'lucide-react';
+import { Trash2, Plus, GripVertical, Calendar as CalendarIcon, Flag, Edit2, X, CheckSquare, Clock, LayoutGrid, Star, Sparkles, ChevronLeft, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Props {
+  key?: any;
   workspaceId: string;
   workspaceName: string;
   onDeleteWorkspace: () => void;
@@ -35,13 +36,15 @@ function formatActivityDate(isoString: string) {
 export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, initialTaskId }: Props) {
   const [workspaceData, setWorkspaceData] = useState<{statuses: Status[], workItems: WorkItem[]} | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'kanban' | 'scrum' | 'waterfall' | 'list'>('kanban');
+  const [activeTab, setActiveTab] = useState<'kanban' | 'scrum' | 'waterfall' | 'list' | 'calendar'>('kanban');
   
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskStatusId, setNewTaskStatusId] = useState<string | null>(null);
   const [newTaskPriority, setNewTaskPriority] = useState("Sedang");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const [calCurrentDate, setCalCurrentDate] = useState(new Date());
 
   // Premium Features States
   const [selectedTask, setSelectedTask] = useState<WorkItem | null>(null);
@@ -131,7 +134,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     }
   };
 
-  const createWorkItem = async (e: React.FormEvent) => {
+  const createWorkItem = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
@@ -141,8 +144,9 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
       body: JSON.stringify({ 
         title: newTaskTitle.trim(), 
         description: newTaskDescription.trim(),
-        statusId: newTaskStatusId, 
+        statusId: newTaskStatusId || (workspaceData?.statuses[0]?.id || null), 
         priority: newTaskPriority,
+        dueDate: newTaskDueDate ? new Date(newTaskDueDate).toISOString() : null,
         labels: JSON.stringify(newTaskLabels)
       })
     });
@@ -152,11 +156,12 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     setNewTaskDescription("");
     setNewTaskStatusId(null);
     setNewTaskPriority("Sedang");
+    setNewTaskDueDate("");
     setNewTaskLabels([]);
     fetchWorkspace();
   };
 
-  const createStatus = async (e: React.FormEvent) => {
+  const createStatus = async (e: FormEvent) => {
     e.preventDefault();
     if (!newColumnName.trim()) return;
 
@@ -193,7 +198,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     fetchWorkspace();
   };
 
-  const updateWorkItemDetails = async (e: React.FormEvent) => {
+  const updateWorkItemDetails = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedTask || !editTaskTitle.trim()) return;
 
@@ -288,7 +293,7 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
     setShowSprintModal(true);
   };
 
-  const handleSaveSprint = (e: React.FormEvent) => {
+  const handleSaveSprint = (e: FormEvent) => {
     e.preventDefault();
     setSprintName(tempSprintName);
     setSprintDates(tempSprintDates);
@@ -350,6 +355,13 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
             onClick={() => setActiveTab('list')}
             className={`text-sm font-bold py-2.5 px-5 rounded-full transition-all ${activeTab === 'list' ? 'bg-brand-text text-white shadow-md' : 'text-gray-500 hover:bg-gray-100 hover:text-brand-text'}`}
           >Daftar</button>
+          <button 
+            onClick={() => setActiveTab('calendar')}
+            className={`text-sm font-bold py-2.5 px-5 rounded-full transition-all flex items-center gap-2 ${activeTab === 'calendar' ? 'bg-brand-text text-white shadow-md' : 'text-gray-500 hover:bg-gray-100 hover:text-brand-text'}`}
+          >
+            <CalendarIcon size={15} />
+            Kalender
+          </button>
         </div>
       </div>
 
@@ -766,6 +778,219 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
             </table>
           </div>
         )}
+
+        {/* TAB KALENDER RUANG KERJA */}
+        {activeTab === 'calendar' && (
+          <div className="max-w-6xl mx-auto space-y-6">
+            {/* Header Kalender */}
+            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-full">
+                  Kalender Proyek
+                </span>
+                <h3 className="text-2xl font-extrabold text-brand-text mt-2 flex items-center gap-2">
+                  <CalendarIcon className="w-6 h-6 text-brand-orange" />
+                  {calCurrentDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}
+                </h3>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  Jadwal dan batas waktu seluruh tugas pada ruang kerja ini.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCalCurrentDate(new Date(calCurrentDate.getFullYear(), calCurrentDate.getMonth() - 1, 1))}
+                  className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-gray-600 transition-colors shadow-2xs cursor-pointer"
+                  title="Bulan sebelumnya"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalCurrentDate(new Date())}
+                  className="px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer"
+                >
+                  Bulan Ini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalCurrentDate(new Date(calCurrentDate.getFullYear(), calCurrentDate.getMonth() + 1, 1))}
+                  className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl text-gray-600 transition-colors shadow-2xs cursor-pointer"
+                  title="Bulan berikutnya"
+                >
+                  <ChevronRight size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowNewTaskModal(true)}
+                  className="ml-2 px-4 py-2.5 bg-brand-orange text-white rounded-xl text-xs font-extrabold shadow-sm hover:bg-brand-orange/95 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <Plus size={16} /> Tambah Tugas
+                </button>
+              </div>
+            </div>
+
+            {/* Grid Kalender Bulanan */}
+            <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+              {/* Nama Hari */}
+              <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-extrabold text-gray-400 uppercase tracking-wider">
+                {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day, idx) => (
+                  <div key={idx} className="py-2">{day}</div>
+                ))}
+              </div>
+
+              {/* Sel Tanggal */}
+              <div className="grid grid-cols-7 gap-2">
+                {(() => {
+                  const year = calCurrentDate.getFullYear();
+                  const month = calCurrentDate.getMonth();
+                  const firstDay = new Date(year, month, 1);
+                  const lastDay = new Date(year, month + 1, 0);
+                  const daysInMonth = lastDay.getDate();
+                  
+                  let startDayOfWeek = firstDay.getDay() - 1;
+                  if (startDayOfWeek === -1) startDayOfWeek = 6;
+                  
+                  const cells = [];
+                  const prevMonthLastDay = new Date(year, month, 0).getDate();
+                  
+                  // Hari bulan sebelumnya
+                  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                    const dayNum = prevMonthLastDay - i;
+                    const d = new Date(year, month - 1, dayNum);
+                    const dStr = d.toISOString().split('T')[0];
+                    cells.push({ dayNum, isCurrentMonth: false, dStr });
+                  }
+                  
+                  // Hari bulan ini
+                  for (let i = 1; i <= daysInMonth; i++) {
+                    const d = new Date(year, month, i);
+                    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    cells.push({ dayNum: i, isCurrentMonth: true, dStr });
+                  }
+                  
+                  // Hari bulan berikutnya
+                  const remaining = (7 - (cells.length % 7)) % 7;
+                  for (let i = 1; i <= remaining; i++) {
+                    const d = new Date(year, month + 1, i);
+                    const dStr = d.toISOString().split('T')[0];
+                    cells.push({ dayNum: i, isCurrentMonth: false, dStr });
+                  }
+                  
+                  const todayStr = new Date().toISOString().split('T')[0];
+
+                  return cells.map((cell, idx) => {
+                    const cellTasks = workspaceData.workItems.filter(item => {
+                      if (!item.dueDate) return false;
+                      const itemDateStr = item.dueDate.split('T')[0];
+                      return itemDateStr === cell.dStr;
+                    });
+
+                    const isToday = cell.dStr === todayStr;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`min-h-[110px] rounded-2xl p-2 border flex flex-col transition-all ${
+                          cell.isCurrentMonth ? 'bg-gray-50/50 border-gray-100 hover:bg-white hover:border-brand-orange/40 hover:shadow-sm' : 'bg-gray-50/20 border-transparent opacity-40'
+                        } ${isToday ? 'ring-2 ring-brand-orange border-brand-orange bg-orange-50/20' : ''}`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className={`text-xs font-extrabold w-6 h-6 flex items-center justify-center rounded-full ${
+                            isToday ? 'bg-brand-orange text-white' : cell.isCurrentMonth ? 'text-brand-text' : 'text-gray-400'
+                          }`}>
+                            {cell.dayNum}
+                          </span>
+                          {cellTasks.length > 0 && (
+                            <span className="text-[10px] font-bold text-gray-400">
+                              {cellTasks.length} tugas
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex-1 space-y-1 overflow-y-auto max-h-[80px] no-scrollbar">
+                          {cellTasks.map(task => {
+                            const priorityColor = task.priority === 'Tinggi' || task.priority === 'Mendesak' || task.priority === 'High'
+                              ? 'bg-red-500 text-white'
+                              : task.priority === 'Sedang' || task.priority === 'Medium'
+                              ? 'bg-orange-500 text-white'
+                              : 'bg-blue-500 text-white';
+
+                            return (
+                              <button
+                                key={task.id}
+                                type="button"
+                                onClick={() => setSelectedTask(task)}
+                                className="w-full text-left p-1.5 rounded-lg bg-white border border-gray-200/80 shadow-2xs hover:border-brand-orange transition-all cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-1">
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${priorityColor}`}></span>
+                                  <span className="text-[11px] font-bold text-brand-text truncate group-hover:text-brand-orange transition-colors">
+                                    {task.title}
+                                  </span>
+                                </div>
+                                <div className="text-[9px] text-gray-400 truncate mt-0.5">
+                                  {task.status?.name || 'Tanpa Status'}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Bagian Tugas Tanpa Tenggat Waktu (Backlog untuk Dijadwalkan) */}
+            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-6 border border-white shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-base font-extrabold text-brand-text flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  Tugas Tanpa Tenggat Waktu (Belum Terjadwal)
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">
+                    {workspaceData.workItems.filter(i => !i.dueDate).length}
+                  </span>
+                </h4>
+                <span className="text-xs text-gray-400 font-medium">Klik pada tugas untuk mengatur tenggat waktu</span>
+              </div>
+
+              {workspaceData.workItems.filter(i => !i.dueDate).length === 0 ? (
+                <div className="text-center py-6 text-sm text-gray-400 font-semibold bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                  Semua tugas pada proyek ini telah memiliki jadwal tenggat waktu!
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {workspaceData.workItems.filter(i => !i.dueDate).map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => setSelectedTask(task)}
+                      className="bg-white p-4 rounded-2xl border border-gray-200/70 hover:border-brand-orange/50 hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${getPriorityColor(task.priority)}`}>
+                            {task.priority || 'Normal'}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-medium">
+                            {task.status?.name}
+                          </span>
+                        </div>
+                        <h5 className="font-bold text-sm text-brand-text line-clamp-1">{task.title}</h5>
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-brand-orange font-bold">
+                        <span>+ Atur Tenggat Waktu</span>
+                        <ChevronRight size={14} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL: TAMBAH TUGAS BARU */}
@@ -815,6 +1040,29 @@ export function WorkspaceView({ workspaceId, workspaceName, onDeleteWorkspace, i
                   <option value="Tinggi">Tinggi</option>
                   <option value="Mendesak">Mendesak</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Kolom Status</label>
+                <select 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all font-bold"
+                  value={newTaskStatusId || (workspaceData?.statuses[0]?.id || "")}
+                  onChange={(e) => setNewTaskStatusId(e.target.value)}
+                >
+                  {workspaceData?.statuses.map(st => (
+                    <option key={st.id} value={st.id}>{st.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Batas Jatuh Tempo (Tenggat Waktu)</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all font-semibold text-gray-700"
+                  value={newTaskDueDate}
+                  onChange={(e) => setNewTaskDueDate(e.target.value)}
+                />
               </div>
 
               {/* Custom Colored Labels for New Task */}

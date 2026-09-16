@@ -21,7 +21,7 @@ export interface WorkItem {
   type: string;
   priority: string;
   statusId: string | null;
-  dueDate?: string;
+  dueDate?: string | null;
   labels?: string | null;
   subtasks?: string | null;
   activities?: string | null;

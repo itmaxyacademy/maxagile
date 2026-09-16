@@ -199,7 +199,7 @@ async function startServer() {
 
   // Work Items
   apiRouter.post("/workspaces/:id/work-items", async (req, res) => {
-    const { title, description, priority, statusId, labels } = req.body;
+    const { title, description, priority, statusId, labels, dueDate } = req.body;
     let finalStatusId = statusId;
     if (!finalStatusId) {
       const firstStatus = await prisma.status.findFirst({
@@ -223,6 +223,7 @@ async function startServer() {
         description,
         priority: priority || "Sedang",
         statusId: finalStatusId,
+        dueDate: dueDate ? new Date(dueDate) : null,
         labels,
         activities: JSON.stringify(initialActivities)
       },
@@ -243,6 +244,23 @@ async function startServer() {
         try {
           activitiesList = JSON.parse(existing.activities);
         } catch (e) {}
+      }
+
+      if (req.body.dueDate !== undefined) {
+        if (req.body.dueDate) {
+          const newDate = new Date(req.body.dueDate);
+          req.body.dueDate = newDate;
+          activitiesList.push({
+            timestamp: new Date().toISOString(),
+            text: `Batas waktu diatur ke ${newDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`
+          });
+        } else {
+          req.body.dueDate = null;
+          activitiesList.push({
+            timestamp: new Date().toISOString(),
+            text: `Batas waktu dihapus`
+          });
+        }
       }
 
       if (req.body.statusId && req.body.statusId !== existing?.statusId) {
